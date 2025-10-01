@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stable Diffusion Web UI (Simple)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;background:#f6f7fb;color:#111}
+    .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(20,20,40,.06);max-width:820px;margin:0 auto}
+    label{display:block;margin-bottom:8px;font-weight:600}
+    textarea{width:100%;min-height:80px;padding:10px;border-radius:8px;border:1px solid #ddd}
+    button{padding:10px 16px;border-radius:8px;border:0;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
+    button:hover{background:#1d4ed8}
+    button:disabled{background:#94a3b8;cursor:not-allowed}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    img#out{max-width:100%;margin-top:12px;border-radius:10px;display:none}
+    img#out.show{display:block}
+    .hint{font-size:13px;color:#666;margin-top:8px}
+    .hint.error{color:#dc2626}
+    .hint.success{color:#16a34a}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Stable Diffusion — Simple Web UI</h2>
+    <p class="hint">Enter a prompt, click Generate. The backend runs a Hugging Face Diffusers pipeline and returns a PNG.</p>
+
+    <label for="prompt">Prompt</label>
+    <textarea id="prompt">a fantasy landscape, vibrant colors, cinematic lighting, cinematic composition</textarea>
+
+    <div style="margin-top:12px" class="row">
+      <label style="width:120px">Width</label>
+      <select id="width">
+        <option value="512" selected>512</option>
+        <option value="640">640</option>
+        <option value="768">768</option>
+      </select>
+      <label style="width:120px">Height</label>
+      <select id="height">
+        <option value="512" selected>512</option>
+        <option value="640">640</option>
+        <option value="768">768</option>
+      </select>
+      <label style="width:120px">Steps</label>
+      <input id="steps" type="number" value="20" min="1" max="150" style="width:86px;padding:8px;border-radius:8px;border:1px solid #ddd" />
+      <button id="gen">Generate</button>
+    </div>
+
+    <div id="status" class="hint"></div>
+    <img id="out" alt="generated image" />
+  </div>
+
+<script>
+const btn = document.getElementById('gen');
+const status = document.getElementById('status');
+const out = document.getElementById('out');
+
+btn.addEventListener('click', async ()=>{
+  const prompt = document.getElementById('prompt').value;
+  const width = parseInt(document.getElementById('width').value);
+  const height = parseInt(document.getElementById('height').value);
+  const steps = parseInt(document.getElementById('steps').value);
+
+  if(!prompt.trim()) { 
+    status.textContent = 'Please enter a prompt.';
+    status.className = 'hint error';
+    return;
+  }
+
+  // Disable button and show loading state
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  status.textContent = 'Generating... this may take a while depending on your machine.';
+  status.className = 'hint';
+  out.classList.remove('show');
+
+  try{
+    const res = await fetch('/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, width, height, steps })
+    });
+
+    if(!res.ok){
+      const txt = await res.text();
+      status.textContent = 'Server error: ' + txt;
+      status.className = 'hint error';
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    out.src = url;
+    out.classList.add('show');
+    status.textContent = 'Done! Image generated successfully.';
+    status.className = 'hint success';
+  }catch(e){
+    status.textContent = 'Request failed: ' + e.message;
+    status.className = 'hint error';
+  }finally{
+    // Re-enable button
+    btn.disabled = false;
+    btn.textContent = 'Generate';
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+# Ignore Python virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore build / distribution folders
+build/
+dist/
+*.egg-info/
+
+# Ignore local environment/config files
+*.env
+*.DS_Store
+*.log
+
+# Ignore compiled binaries
+*.so
+*.dll
+*.exe
+
+# Ignore PyTorch model checkpoints
+*.pt
+*.pth
+*.ckpt
+
+# Ignore IDE/editor settings
+.vscode/
+.idea/
